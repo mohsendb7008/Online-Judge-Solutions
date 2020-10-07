@@ -1,0 +1,1 @@
+fun main() = (readLine() to readLine()!!.split("[^x]".toRegex())).second.filter { it.length >= 3 }.sumBy { it.length - 2 }.let(::println)
