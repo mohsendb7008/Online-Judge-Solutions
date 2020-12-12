@@ -3,23 +3,24 @@ using namespace std;
 
 // Frosh Week
 
-int n, m;
-int a[200003], b[200003];
+const int maxn = 2e5 + 3;
+
+int n, m, a[maxn], b[maxn];
 
 int main(){
-    cin >> m >> n;
-    for(int i = 0; i < m; i++)
-        cin >> b[i];
-    sort(b, b+m);
+    cin >> n >> m;
     for(int i = 0; i < n; i++)
         cin >> a[i];
-    sort(a, a+n);
-    int i = n-1, j = m-1;
-    int ans = 0;
-    while(i >= 0 && j >= 0){
-        if(b[j] <= a[i])
-            i--, ans++;
-        j--;
+    for(int i = 0; i < m; i++)
+        cin >> b[i];
+    sort(a, a + n);
+    sort(b, b + m);
+    int i = 0, j = 0, ans = 0;
+    while(i < n && j < m){
+        if(a[i] <= b[j])
+            i++, j++, ans++;
+        else
+            j++;
     }
     cout << ans << endl;
 }

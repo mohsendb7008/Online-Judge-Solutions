@@ -1,8 +1,9 @@
 # Catalan Square
 
-n = int(input())
-c = 1
-for i in range(1, n + 1):
-    c *= 4 * i + 2
-    c //= i + 2
-print(c)
+cat = [1]
+
+if __name__ == '__main__':
+    n = int(input())
+    for m in range(1, n+2):
+        cat.append(((4 * m - 2) * cat[m-1]) // (m + 1))
+    print(cat[n+1])

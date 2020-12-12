@@ -3,18 +3,17 @@ using namespace std;
 
 // Ocean's Anti-11
 
-const int mod = 1e9+7;
-int dp[10003];
+const int maxn = 1e5 + 3;
+const int mod = 1e9 + 7;
+
+int fib[maxn];
 
 int main(){
-    dp[0] = 1;
-    dp[1] = 2;
-    for(int i = 2; i <= 10000; i++)
-        dp[i] = (dp[i-2] + dp[i-1]) % mod;
+    fib[0] = fib[1] = 1;
+    for(int i = 2; i < maxn; i++)
+        fib[i] = (fib[i-1] + fib[i-2]) % mod;
     int t, n;
     cin >> t;
-    while(t--){
-        cin >> n;
-        cout << dp[n] << endl;
-    }
+    while(t--)
+        cin >> n, cout << fib[n+1] << endl;
 }

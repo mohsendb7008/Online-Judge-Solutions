@@ -1,46 +1,46 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-const int maxn = 3e5;
-int n, m, seg[4 * maxn + 3], won[maxn + 3];
+const int maxn = 3e5 + 3;
 
-void kill(int v, int tl, int tr, int ql, int qr, int w){
-    if(ql > qr)
-        return;
-    if(seg[v] != -1)
-        return;
-    if(tl == ql && tr == qr)
-        seg[v] = w;
+int n, m, l, r, x, seg[4 * maxn], heap[maxn];
+
+void build(int v, int tl, int tr){
+    seg[v] = -1;
+    if(tl == tr)
+        heap[tl] = v;
     else{
-        int tm = (tl + tr) / 2;
-        kill(2 * v, tl, tm, ql, min(qr, tm), w);
-        kill(2 * v + 1, tm + 1, tr, max(tm + 1, ql), qr, w);
+        int mid = (tl + tr) / 2;
+        build(2 * v, tl, mid);
+        build(2 * v + 1, mid + 1, tr);
     }
 }
 
-void winner(int v, int tl, int tr, int w){
-    if(tl == tr)
-        won[tl] = (seg[v] != -1) ? seg[v] : w;
-    else{
-        int tm = (tl + tr) / 2;
-        winner(2 * v, tl, tm, (seg[v] != -1) ? seg[v] : w);
-        winner(2 * v + 1, tm + 1, tr, (seg[v] != -1) ? seg[v] : w);
+void trace(int v, int tl, int tr, int l, int r, int winner){
+    if(l > r || seg[v] != -1)
+        return;
+    if(tl == l && tr == r){
+        seg[v] = winner;
+        return;
     }
+    int mid = (tl + tr) / 2;
+    trace(2 * v, tl, mid, l, min(r, mid), winner);
+    trace(2 * v + 1, mid+1, tr, max(l, mid+1), r, winner);
 }
 
 int main(){
     cin >> n >> m;
-    fill_n(seg, 4 * n, -1);
-    int l, r, x;
+    build(1, 0, n-1);
     while(m--){
         cin >> l >> r >> x, l--, r--, x--;
-        if(x != l)
-            kill(1, 0, n - 1, l, x - 1, x);
-        if(x != r)
-            kill(1, 0, n - 1, x + 1, r, x);
+        trace(1, 0, n-1, l, x-1, x);
+        trace(1, 0, n-1, x+1, r, x);
     }
-    winner(1, 0, n - 1, -1);
-    for(int i = 0; i < n; i++)
-        cout << won[i] + 1 << " ";
+    for(int i = 0; i < n; i++){
+        int it = heap[i], ans = -1;
+        while(it && ans == -1)
+            ans = seg[it], it /= 2;
+        cout << ans + 1 << " "; 
+    }
     cout << endl;
 }
