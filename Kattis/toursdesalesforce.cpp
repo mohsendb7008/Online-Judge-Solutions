@@ -3,7 +3,7 @@ using namespace std;
 
 // Tours de Sales Force
 
-inline double dis(pair<int, int> f, pair<int, int> s){
+inline double dist(pair<int, int>& f, pair<int, int>& s){
     double dx = f.first - s.first, dy = f.second - s.second;
     return sqrt(dx * dx + dy * dy);
 }
@@ -11,32 +11,97 @@ inline double dis(pair<int, int> f, pair<int, int> s){
 vector<pair<int, int>> curr;
 double tsp[(1 << 16) + 3][16 + 3];
 
-double csp(){
+inline double csp(){
     int siz = curr.size() - 1;
     for(int mask = 1; mask < (1 << siz); mask++)
         for(int i = 0; i < siz; i++){
-            if(mask == 1 << i)
-                tsp[mask][i] = dis(curr[0], curr[i+1]);
+            if(mask == (1 << i))
+                tsp[mask][i] = dist(curr[0], curr[i+1]);
             else if(mask & (1 << i)){
-                tsp[mask][i] = INT_MAX;
+                tsp[mask][i] = LLONG_MAX;
                 for(int j = 0; j < siz; j++)
                     if(j != i && (mask & (1 << j)))
-                        tsp[mask][i] = min(tsp[mask][i], tsp[mask - (1 << i)][j] + dis(curr[j+1], curr[i+1]));
+                        tsp[mask][i] = min(tsp[mask][i], tsp[mask - (1 << i)][j] + dist(curr[j+1], curr[i+1]));
             }
         }
-    double ans = INT_MAX;
+    double ans = LLONG_MAX;
     for(int i = 0; i < siz; i++)
-        ans = min(ans, tsp[(1 << siz) - 1][i] + dis(curr[i+1], curr[0]));
+        ans = min(ans, tsp[(1 << siz) - 1][i] + dist(curr[i+1], curr[0]));
     return ans;
 }
 
 int d;
 vector<pair<int, int>> region[53];
 
-double bipartite[53][53];
+#define num double
+
+const int maxn = 53;
+const num inf = LLONG_MAX;
+
+int N, src, sink;
+bool found[maxn];
+int cap[maxn][maxn], flow[maxn][maxn], par[maxn];
+num picked[maxn], dis[maxn], cost[maxn][maxn];
+
+bool aug(){
+    fill_n(found, N, false);
+    fill_n(dis, N + 1, inf);
+    int it = src;
+    dis[it] = 0;
+    while(it != N){
+        int best = N;
+        found[it] = true;
+        for(int k = 0; k < N; k++){
+            if(found[k])
+                continue;
+            if(flow[k][it] != 0){
+                num val = dis[it] + picked[it] - picked[k] - cost[k][it];
+                if(dis[k] > val)
+                    dis[k] = val, par[k] = it;
+            }
+            if(flow[it][k] < cap[it][k]){
+                num val = dis[it] + picked[it] - picked[k] + cost[it][k];
+                if(dis[k] > val)
+                    dis[k] = val, par[k] = it;
+            }
+            if(dis[k] < dis[best])
+                best = k;
+        }
+        it = best;
+    }
+    for(int k = 0; k < N; k++)
+        if(dis[k] != inf)
+            picked[k] += dis[k];
+    return found[sink];
+}
+
+pair<int, num> mincost_maxflow(){
+    int tf = 0;
+    num tc = 0;
+    while(aug()){
+        int f = INT_MAX;
+        for(int x = sink; x != src; x = par[x]){
+            if(flow[x][par[x]] != 0)
+                f = min(f, flow[x][par[x]]);
+            else
+                f = min(f, cap[par[x]][x] - flow[par[x]][x]);
+        }
+        tf += f;
+        for(int x = sink; x != src; x = par[x]){
+            if(flow[x][par[x]] != 0){
+                flow[x][par[x]] -= f;
+                tc -= cost[x][par[x]] * f;
+            }
+            else{
+                flow[par[x]][x] += f;
+                tc += cost[par[x]][x] * f;
+            }   
+        }
+    }
+    return {tf, tc};
+}
 
 int main(){
-    cout << fixed << setprecision(5);
     cin >> d;
     double ans = 0;
     for(int i = 0; i < d; i++){
@@ -47,8 +112,9 @@ int main(){
         curr = region[i];
         ans += csp();
     }
-    cout << ans << " ";
-    ans = 0;
+    N = d + 2, src = 0, sink = d + 1;
+    for(int i = 0; i < d / 2; i++)
+        cap[src][i+1] = 1;
     for(int i = 0; i < d / 2; i++)
         for(int j = d / 2; j < d; j++){
             curr.clear();
@@ -56,7 +122,10 @@ int main(){
                 curr.push_back(p);
             for(pair<int, int> p : region[j])
                 curr.push_back(p);
-            bipartite[i][j] = bipartite[j][i] = csp();
+            cap[i+1][j+1] = 1;
+            cost[i+1][j+1] = csp();
         }
-    // Learn min cost bipartite matching and continue: 
+    for(int j = d / 2; j < d; j++)
+        cap[j+1][sink] = 1;
+    cout << fixed << setprecision(6) << ans << " " << mincost_maxflow().second << endl;
 }
