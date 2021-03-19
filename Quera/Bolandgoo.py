@@ -1,0 +1,1 @@
+print('\n'.join(map(lambda x: s[x]*(x+1)+s[x+1:], range(len(s:=input())))))
