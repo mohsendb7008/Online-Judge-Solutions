@@ -1,0 +1,1 @@
+print(2**len(list(filter(lambda x: x in 'TDLF', input()))))

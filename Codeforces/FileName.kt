@@ -1,1 +1,6 @@
-fun main() = (readLine() to readLine()!!.split("[^x]".toRegex())).second.filter { it.length >= 3 }.sumBy { it.length - 2 }.let(::println)
+object FileName {
+    fun solve() =
+        println((readLine() to readLine()!!.split(Regex("[^x]")).filter { it.startsWith("xxx") }.sumBy { it.length - 2 }).second)
+}
+
+fun main() = FileName.solve()

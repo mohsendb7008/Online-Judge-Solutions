@@ -1,3 +1,10 @@
-fun main() = (readLine() to readLine()!!.split(" ").map { it.toInt() }).second.reversed().distinct().also {
-    println(it.size)
-}.reversed().joinToString(" ").let(::println)
+object RemoveDuplicates {
+    fun solve(){
+        (readLine() to readLine()!!.split(" ").map { it.toInt() }.reversed().toSet().toList().reversed()).second.let {
+            println(it.size)
+            println(it.joinToString(" "))
+        }
+    }
+}
+
+fun main() = RemoveDuplicates.solve()
