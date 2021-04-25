@@ -1,0 +1,25 @@
+from functions import f, g, h
+from threading import Thread
+
+def solve():
+    t1 = Thread(name=1, target=f[0])
+    t1.start()
+    t2 = Thread(name=2, target=f[1])
+    t2.start()
+    t3 = Thread(name=3, target=f[2])
+    t3.start()
+    t4 = Thread(name=4, target=f[3])
+    t4.start()
+    t1.join()
+    t2.join()
+    t3.join()
+    t4.join()
+    t1 = Thread(name=1, target=g[0])
+    t1.start()
+    t2 = Thread(name=2, target=g[1])
+    t2.start()
+    t1.join()
+    t2.join()
+    t1 = Thread(name=1, target=h[0])
+    t1.start()
+    t1.join()
