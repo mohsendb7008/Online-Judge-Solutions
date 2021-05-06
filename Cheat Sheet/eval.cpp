@@ -78,7 +78,7 @@ int eval(string str){ // with () + - * /
                     cnt--;
                 j++;
             }
-            ans += to_string(eval(str.substr(i+1, j-i-1)));
+            ans += to_string(eval(str.substr(i+1, j-i-2)));
             i = j;
         }
         else
