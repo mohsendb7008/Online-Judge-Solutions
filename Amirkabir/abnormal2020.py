@@ -1,0 +1,1 @@
+print('fever' if int(input()) >= 38 else 'no fever')
