@@ -1,0 +1,1 @@
+print("codecup6"[(int(input()) - 1) % 8])
