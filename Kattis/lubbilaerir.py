@@ -1,0 +1,1 @@
+print(list(input())[0])

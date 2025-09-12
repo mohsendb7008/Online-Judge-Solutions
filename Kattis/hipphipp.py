@@ -1,0 +1,21 @@
+print("""Hipp hipp hurra!
+Hipp hipp hurra!
+Hipp hipp hurra!
+Hipp hipp hurra!
+Hipp hipp hurra!
+Hipp hipp hurra!
+Hipp hipp hurra!
+Hipp hipp hurra!
+Hipp hipp hurra!
+Hipp hipp hurra!
+Hipp hipp hurra!
+Hipp hipp hurra!
+Hipp hipp hurra!
+Hipp hipp hurra!
+Hipp hipp hurra!
+Hipp hipp hurra!
+Hipp hipp hurra!
+Hipp hipp hurra!
+Hipp hipp hurra!
+Hipp hipp hurra!
+""")
