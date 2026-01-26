@@ -3,7 +3,7 @@
 using namespace std;
 
 int active[90];
-pair<int, int>dp[91][1801][5][5];
+pair<int, int> dp[91][1801][5][5];
 
 inline void relax(const int i, const int cap, const int streakA, const int streakB, const pair<int, int>& transition) {
     const int A1 = dp[i][cap][streakA][streakB].first;
