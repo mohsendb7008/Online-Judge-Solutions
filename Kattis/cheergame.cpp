@@ -3,17 +3,17 @@
 using namespace std;
 
 int active[90];
-pair<int, int> dp[91][1801][5][5];
+pair<int, int>dp[91][1801][5][5];
 
-inline void relax(const int i, const int j, const int a, const int b, const pair<int, int>& sub) {
-    const int A1 = dp[i][j][a][b].first;
-    const int B1 = dp[i][j][a][b].second;
+inline void relax(const int i, const int cap, const int streakA, const int streakB, const pair<int, int>& transition) {
+    const int A1 = dp[i][cap][streakA][streakB].first;
+    const int B1 = dp[i][cap][streakA][streakB].second;
     const int diff1 = A1 - B1;
-    const int A2 = sub.first;
-    const int B2 = sub.second;
+    const int A2 = transition.first;
+    const int B2 = transition.second;
     const int diff2 = A2 - B2;
     if (diff2 > diff1 || (diff2 == diff1 && A2 > A1)) {
-        dp[i][j][a][b] = make_pair(A2, B2);
+        dp[i][cap][streakA][streakB] = make_pair(A2, B2);
     }
 }
 
@@ -29,29 +29,29 @@ int main() {
         }
     }
     for (int i = 90; i >= 0; i--) {
-        for (int j = 0; j <= n * t; j++) {
-           for (int a = 0; a < 5; a++) {
-               for (int b = 0; b < 5; b++) {
-                   dp[i][j][a][b] = make_pair(INT_MIN, 0);
+        for (int cap = 0; cap <= n * t; cap++) {
+           for (int streakA = 0; streakA < 5; streakA++) {
+               for (int streakB = 0; streakB < 5; streakB++) {
+                   dp[i][cap][streakA][streakB] = make_pair(INT_MIN, 0);
                    if (i == 90) {
-                       dp[i][j][a][b] = make_pair(0, 0);
+                       dp[i][cap][streakA][streakB] = make_pair(0, 0);
                    }
                    else if (i < 90) {
-                       auto sub1 = dp[i + 1][j][0][i != 44 && active[i] ? (b + 1) % 5 : 0];
-                       if (active[i] && b == 4) {
-                           sub1.second++;
+                       auto transition1 = dp[i + 1][cap][0][i != 44 && active[i] ? (streakB + 1) % 5 : 0];
+                       if (active[i] && streakB == 4) {
+                           transition1.second++;
                        }
-                       relax(i, j, a, b, sub1);
-                       if (min(j, n) >= active[i]) {
-                           auto sub2 = dp[i + 1][j - active[i]][0][0];
-                           relax(i, j, a, b, sub2);
+                       relax(i, cap, streakA, streakB, transition1);
+                       if (min(cap, n) >= active[i]) {
+                           auto transition2 = dp[i + 1][cap - active[i]][0][0];
+                           relax(i, cap, streakA, streakB, transition2);
                        }
-                       if (min(j, n) >= active[i] + 1) {
-                           auto sub3 = dp[i + 1][j - active[i] - 1][i != 44 ? (a + 1) % 5 : 0][0];
-                           if (a == 4) {
-                               sub3.first++;
+                       if (min(cap, n) >= active[i] + 1) {
+                           auto transition3 = dp[i + 1][cap - active[i] - 1][i != 44 ? (streakA + 1) % 5 : 0][0];
+                           if (streakA == 4) {
+                               transition3.first++;
                            }
-                           relax(i, j, a, b, sub3);
+                           relax(i, cap, streakA, streakB, transition3);
                        }
                    }
                }
