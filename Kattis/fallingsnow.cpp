@@ -2,7 +2,6 @@
 #include <vector>
 #include <set>
 #include <map>
-#include <climits>
 using namespace std;
 
 template <typename T>
@@ -31,75 +30,53 @@ public:
     }
 };
 
-set<long long int> all;
-map<long long int, long long int> lefts, rights;
-
+#define num long long int
+set<num> all;
+map<num, num> lefts, rights;
 struct snow {
-    long long int point, height, count, countL, countR;
+    num height, count, countL, countR;
 };
-
 vector<snow> snows;
-
-constexpr long long int mod = 1000000009;
+constexpr num mod = 1000000009;
 
 int main() {
-    long long int n;
+    num n;
     cin >> n;
     while (n--) {
-        long long int a, b;
+        num a, b;
         cin >> a >> b;
         all.insert(a);
         all.insert(b);
         lefts[a]++;
         rights[b]++;
     }
-    long long int counter = 0;
-    long long int max_counter = -1;
+    num counter = 0;
+    num max_counter = 0;
     if (!all.empty() && all.find(0) == all.end()) {
-        const snow snow0 { 0, 0, *all.begin(), 0, 0 };
+        const snow snow0 { 0, *all.begin(), 0, 0 };
         snows.push_back(snow0);
         max_counter = 0;
     }
-    for (long long int i : all) {
+    for (num i : all) {
         counter += lefts[i];
-        if (counter > max_counter) {
-            max_counter = counter;
-        }
-        const snow snow1 { i, counter, 1, 0, 0 };
+        max_counter = max(max_counter, counter);
+        const snow snow1 { counter, 1, 0, 0 };
         snows.push_back(snow1);
         counter -= rights[i];
         auto nextCandidate = all.lower_bound(i + 1);
         if (nextCandidate != all.end() && *nextCandidate > i + 1) {
-            const snow snow2 { i + 1, counter, *nextCandidate - i - 1, 0, 0 };
+            const snow snow2 { counter, *nextCandidate - i - 1, 0, 0 };
             snows.push_back(snow2);
         }
     }
-    long long int minh1 = LLONG_MAX, minh2 = LLONG_MAX;
-    bool shovel = true;
-    for (const snow s : snows) {
-        if (s.height <= minh1) {
-            minh1 = s.height;
-        }
-        else if (s.height <= minh2) {
-            minh2 = s.height;
-        }
-        else {
-            shovel = false;
-            break;
-        }
-    }
-    if (shovel) {
-        cout << "shovel time!" << endl;
-        return 0;
-    }
-    BinaryIndexedTree<long long int> firsts(max_counter + 1);
+    BinaryIndexedTree<num> firsts(max_counter + 1);
     for (snow& second : snows) {
         if (second.height > 0) {
             second.countL = firsts.RangeSumQuery(second.height);
         }
         firsts.IncreaseValueAt(second.height + 1, second.count);
     }
-    BinaryIndexedTree<long long int> thirds(max_counter + 1);
+    BinaryIndexedTree<num> thirds(max_counter + 1);
     for (auto it = snows.rbegin(); it != snows.rend(); ++it) {
         snow& second = *it;
         if (second.height < max_counter) {
@@ -107,12 +84,21 @@ int main() {
         }
         thirds.IncreaseValueAt(second.height + 1, second.count);
     }
-    long long int ans = 0;
-    for (const snow s : snows) {
-        long long int total = s.count % mod;
-        total = total * (s.countL % mod) % mod;
-        total = total * (s.countR % mod) % mod;
-        ans = (ans + total) % mod;
+    bool shovel = true;
+    num ans = 0;
+    for (const snow& s : snows) {
+        if (s.count > 0 && s.countL > 0 && s.countR > 0) {
+            shovel = false;
+        }
+        num triple = s.count % mod;
+        triple = triple * (s.countL % mod) % mod;
+        triple = triple * (s.countR % mod) % mod;
+        ans = (ans + triple) % mod;
     }
-    cout << ans << endl;
+    if (shovel) {
+        cout << "shovel time!" << endl;
+    }
+    else {
+        cout << ans << endl;
+    }
 }
