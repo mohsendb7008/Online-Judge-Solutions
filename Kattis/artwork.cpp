@@ -49,16 +49,7 @@ inline void activate(const int u, const int v) {
     }
 }
 
-int main() {
-    cin >> n >> m >> q;
-    for (int i = 0; i < q; i++) {
-        cin >> strokes[i].x1 >> strokes[i].y1 >> strokes[i].x2 >> strokes[i].y2;
-    }
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < m; j++) {
-            grid[i][j] = 0;
-        }
-    }
+inline void apply_strokes() {
     for (int i = 0; i < q; i++) {
         if (strokes[i].x1 == strokes[i].x2) {
             for (int j = strokes[i].y1; j <= strokes[i].y2; j++) {
@@ -71,18 +62,9 @@ int main() {
             }
         }
     }
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < m; j++) {
-            parent[i * m + j] = -1;
-        }
-    }
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < m; j++) {
-            if (grid[i][j] == 0) {
-                activate(i, j);
-            }
-        }
-    }
+}
+
+inline void reverse_strokes() {
     for (int i = q-1; i >= 0; i--) {
         ans[i] = sets;
         if (strokes[i].x1 == strokes[i].x2) {
@@ -102,6 +84,32 @@ int main() {
             }
         }
     }
+}
+
+int main() {
+    cin >> n >> m >> q;
+    for (int i = 0; i < q; i++) {
+        cin >> strokes[i].x1 >> strokes[i].y1 >> strokes[i].x2 >> strokes[i].y2;
+    }
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
+            grid[i][j] = 0;
+        }
+    }
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
+            parent[i * m + j] = -1;
+        }
+    }
+    apply_strokes();
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
+            if (grid[i][j] == 0) {
+                activate(i, j);
+            }
+        }
+    }
+    reverse_strokes();
     for (int i = 0; i < q; i++) {
         cout << ans[i] << endl;
     }
