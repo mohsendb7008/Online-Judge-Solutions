@@ -71,7 +71,7 @@ public:
     }
 
     bool operator <(const DijkstraState &other) const {
-        return _distance > other.getDistance();
+        return !(_distance < other.getDistance());
     }
 };
 
@@ -85,8 +85,8 @@ class DijkstraResult {
     std::vector<size_t> _trace;
 
 public:
-    explicit DijkstraResult(const size_t size) {
-        _minDistance.assign(size, std::numeric_limits<T>::max()); // Max value = unreachable
+    explicit DijkstraResult(const size_t size, T maxValue = std::numeric_limits<T>::max()) {
+        _minDistance.assign(size, maxValue); // Max value = unreachable
         _trace.assign(size, size); // Size value = no predecessor
     }
 
@@ -135,15 +135,15 @@ public:
 
     void addBidirectionalEdge(const Edge<T> &edge) {
         _adjacents[edge.getSource().getIndex()].push_back(edge);
-        _adjacents[edge.getDestination().getIndex()].push_back(edge);
+        addEdge(Edge<T>(edge.getDestination(), edge.getSource(), edge.getWeight()));
     }
 
     /**
      * Time Complexity: O((V + E) log V)
      * Space Complexity: O(V + E)
      */
-    DijkstraResult<T> dijkstra(const Node &source, T initialDistance) {
-        DijkstraResult<T> result(_adjacents.size());
+    DijkstraResult<T> dijkstra(const Node &source, T initialDistance, T maxValue = std::numeric_limits<T>::max()) {
+        DijkstraResult<T> result(_adjacents.size(), maxValue);
         std::priority_queue<DijkstraState<T> > queue;
 
         result.updateMinDistance(source, initialDistance, _adjacents.size());
