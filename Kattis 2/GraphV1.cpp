@@ -1,11 +1,13 @@
 #include <vector>
+#include <limits>
 #include <queue>
 #include <algorithm>
 
 /**
  * Graph V1:
  * - Adjacency List
- * - Dijkstra
+ * - SSSP Dijkstra (+Time Table)
+ * - MST Prim
  *
  * Authors:
  * - Mohsen Dehbashi
@@ -16,7 +18,7 @@ class Node {
     size_t _index;
 
 public:
-    explicit Node(const size_t index) : _index(index) {
+    explicit Node(const size_t index) : _index(index){
     }
 
     size_t getIndex() const {
@@ -29,11 +31,16 @@ class Edge {
     Node _source;
     Node _destination;
     T _weight;
+    T _t0;
+    T _p;
 
 public:
-    explicit Edge(const Node source, const Node destination, const T weight) : _source(source),
-                                                                               _destination(destination),
-                                                                               _weight(weight) {
+    explicit Edge(const Node source, const Node destination, const T weight) :
+        _source(source), _destination(destination), _weight(weight), _t0(0), _p(1) {
+    }
+
+    explicit Edge(const Node source, const Node destination, const T weight, const T t0, const T p) :
+        _source(source), _destination(destination), _weight(weight), _t0(t0), _p(p) {
     }
 
     Node getSource() const {
@@ -46,6 +53,30 @@ public:
 
     T getWeight() const {
         return _weight;
+    }
+
+    T getT0() const {
+        return _t0;
+    }
+
+    T getP() const {
+        return _p;
+    }
+
+    bool operator <(const Edge &other) const {
+        return !(_weight < other.getWeight());
+    }
+
+    T ceiling(T weight, T maxValue) const {
+        if (weight <= _t0) {
+            return  _t0;
+        }
+        if (_p == 0) {
+            return maxValue;
+        }
+        const T diff = weight - _t0;
+        const T t = diff / _p + (diff % _p ? 1 : 0);
+        return  _t0 + t * _p;
     }
 };
 
@@ -135,14 +166,16 @@ public:
 
     void addBidirectionalEdge(const Edge<T> &edge) {
         _adjacents[edge.getSource().getIndex()].push_back(edge);
-        addEdge(Edge<T>(edge.getDestination(), edge.getSource(), edge.getWeight()));
+        addEdge(Edge<T>(edge.getDestination(), edge.getSource(),
+            edge.getWeight(), edge.getT0(), edge.getP()));
     }
 
     /**
      * Time Complexity: O((V + E) log V)
      * Space Complexity: O(V + E)
      */
-    DijkstraResult<T> dijkstra(const Node &source, T initialDistance, T maxValue = std::numeric_limits<T>::max()) {
+    DijkstraResult<T> dijkstra(const Node &source, T initialDistance, T maxValue = std::numeric_limits<T>::max(),
+            const size_t stopIndex = std::numeric_limits<size_t>::max()) {
         DijkstraResult<T> result(_adjacents.size(), maxValue);
         std::priority_queue<DijkstraState<T> > queue;
 
@@ -157,6 +190,9 @@ public:
             const Node &target = state.getTarget();
             const T &distance = state.getDistance();
 
+            if (target.getIndex() == stopIndex)
+                break;
+
             if (result.getMinDistance(target) < distance)
                 continue;
 
@@ -164,8 +200,12 @@ public:
                 const Node &neighbor = edge.getDestination();
                 const T &weight = edge.getWeight();
 
-                if (result.updateMinDistance(neighbor, result.getMinDistance(target) + weight,
-                                             target.getIndex())) {
+                const T &candidateDistance = edge.ceiling(result.getMinDistance(target), maxValue);
+                if (candidateDistance == maxValue) {
+                    continue;
+                }
+
+                if (result.updateMinDistance(neighbor, candidateDistance + weight, target.getIndex())) {
                     DijkstraState<T> neighborState(neighbor, result.getMinDistance(neighbor));
                     queue.push(neighborState);
                 }
@@ -174,29 +214,33 @@ public:
         return result;
     }
 
-    T prim(const Node &source, T initial) {
-        std::priority_queue<std::pair<T, size_t>, std::vector<std::pair<T, size_t>>, std::greater<>> pq;
+    /**
+     * Minimum Spanning Tree
+     * Time Complexity: O((V + E) log V)
+     * Space Complexity: O(V + E)
+     */
+    std::vector<Edge<T>> prim(const Node &source) {
+        std::priority_queue<Edge<T>> pq;
         std::vector<bool> taken(_adjacents.size(), false);
         auto process = [this, &pq, &taken](const size_t u) -> void {
             taken[u] = true;
             for (const Edge<T> &edge: _adjacents[u]) {
-                const Node &neighbor = edge.getDestination();
-                if (taken[neighbor.getIndex()])
+                if (taken[edge.getDestination().getIndex()])
                     continue;
-                const T &weight = edge.getWeight();
-                pq.emplace(weight, neighbor.getIndex());
+                pq.push(edge);
             }
         };
+
+        std::vector<Edge<T>> result;
         process(source.getIndex());
-        T sum = initial;
         while (!pq.empty()) {
-            auto state = pq.top();
+            Edge<T> edge = pq.top();
             pq.pop();
-            if (taken[state.second])
+            if (taken[edge.getDestination().getIndex()])
                 continue;
-            sum += state.first;
-            process(state.second);
+            result.push_back(edge);
+            process(edge.getDestination().getIndex());
         }
-        return sum;
+        return result;
     }
 };
