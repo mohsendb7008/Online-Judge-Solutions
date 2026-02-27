@@ -31,8 +31,9 @@ class Edge {
     Node _source;
     Node _destination;
     T _weight;
-    T _t0;
-    T _p;
+    // Timetable properties implying that the edge is only usable at time (k * _p + _t0) for all non-negative integers k:
+    T _t0; // timetable initial value (default = 0)
+    T _p; // timetable periodicity (default = 1)
 
 public:
     explicit Edge(const Node source, const Node destination, const T weight) :
@@ -64,9 +65,14 @@ public:
     }
 
     bool operator <(const Edge &other) const {
-        return !(_weight < other.getWeight());
+        return !(_weight < other.getWeight()); // reverse logic to work easier with std::priority_queue
     }
 
+    /**
+     * @param weight Current time
+     * @param maxValue Infinity
+     * @return Next available time according to timetable properties
+     */
     T ceiling(T weight, T maxValue) const {
         if (weight <= _t0) {
             return  _t0;
@@ -76,7 +82,7 @@ public:
         }
         const T diff = weight - _t0;
         const T t = diff / _p + (diff % _p ? 1 : 0);
-        return  _t0 + t * _p;
+        return _t0 + t * _p;
     }
 };
 
@@ -102,7 +108,7 @@ public:
     }
 
     bool operator <(const DijkstraState &other) const {
-        return !(_distance < other.getDistance());
+        return !(_distance < other.getDistance()); // reverse logic to work easier with std::priority_queue
     }
 };
 
@@ -153,11 +159,11 @@ public:
  */
 template<typename T>
 class GraphV1 {
-    std::vector<std::vector<Edge<T> > > _adjacents;
+    std::vector<std::vector<Edge<T>>> _adjacents;
 
 public:
     explicit GraphV1(const size_t size) {
-        _adjacents.assign(size, std::vector<Edge<T> >());
+        _adjacents.assign(size, std::vector<Edge<T>>());
     }
 
     void addEdge(const Edge<T> &edge) {
@@ -171,40 +177,41 @@ public:
     }
 
     /**
+     * Single Source Shortest Path
      * Time Complexity: O((V + E) log V)
      * Space Complexity: O(V + E)
      */
     DijkstraResult<T> dijkstra(const Node &source, T initialDistance, T maxValue = std::numeric_limits<T>::max(),
             const size_t stopIndex = std::numeric_limits<size_t>::max()) {
         DijkstraResult<T> result(_adjacents.size(), maxValue);
-        std::priority_queue<DijkstraState<T> > queue;
-
+        std::priority_queue<DijkstraState<T>> queue;
+        // Initial with source node:
         result.updateMinDistance(source, initialDistance, _adjacents.size());
         DijkstraState<T> sourceState(source, initialDistance);
         queue.push(sourceState);
-
+        // Iterate greedily:
         while (!queue.empty()) {
             DijkstraState<T> state = queue.top();
             queue.pop();
-
             const Node &target = state.getTarget();
             const T &distance = state.getDistance();
-
+            // Early termination if destination is static:
             if (target.getIndex() == stopIndex)
                 break;
-
+            // Drop invalid state:
             if (result.getMinDistance(target) < distance)
                 continue;
-
+            // Process target neighbors:
             for (const Edge<T> &edge: _adjacents[target.getIndex()]) {
                 const Node &neighbor = edge.getDestination();
                 const T &weight = edge.getWeight();
-
-                const T &candidateDistance = edge.ceiling(result.getMinDistance(target), maxValue);
-                if (candidateDistance == maxValue) {
-                    continue;
+                T candidateDistance = result.getMinDistance(target);
+                if (std::is_arithmetic<T>()) { // Only apply timetable if T is arithmetic
+                    candidateDistance = edge.ceiling(candidateDistance, maxValue);
+                    if (candidateDistance == maxValue) {
+                        continue;
+                    }
                 }
-
                 if (result.updateMinDistance(neighbor, candidateDistance + weight, target.getIndex())) {
                     DijkstraState<T> neighborState(neighbor, result.getMinDistance(neighbor));
                     queue.push(neighborState);
@@ -220,22 +227,24 @@ public:
      * Space Complexity: O(V + E)
      */
     std::vector<Edge<T>> prim(const Node &source) {
-        std::priority_queue<Edge<T>> pq;
+        std::priority_queue<Edge<T>> queue;
         std::vector<bool> taken(_adjacents.size(), false);
-        auto process = [this, &pq, &taken](const size_t u) -> void {
+        // Process neighbors lambda:
+        auto process = [this, &queue, &taken](const size_t u) -> void {
             taken[u] = true;
             for (const Edge<T> &edge: _adjacents[u]) {
                 if (taken[edge.getDestination().getIndex()])
                     continue;
-                pq.push(edge);
+                queue.push(edge);
             }
         };
-
+        // Initiate with source node:
         std::vector<Edge<T>> result;
         process(source.getIndex());
-        while (!pq.empty()) {
-            Edge<T> edge = pq.top();
-            pq.pop();
+        // Iterate greedily:
+        while (!queue.empty()) {
+            Edge<T> edge = queue.top();
+            queue.pop();
             if (taken[edge.getDestination().getIndex()])
                 continue;
             result.push_back(edge);
