@@ -27,7 +27,7 @@ int main() {
         SubstringHash<> hash1(col, p1, mod1, 'a');
         SubstringHash<> hash2(col, p2, mod2, 'a');
         for (int j = 0; j < n; j++) {
-            h[j][i] = hash1.getHash(j, n - 1) % mod1 + hash2.getHash(j, n - 1);
+            h[j][i] = hash1.getHash(j, n - 1) * mod1 + hash2.getHash(j, n - 1);
         }
     }
     int lo = 0, hi = n - 1;
